@@ -92,6 +92,44 @@ button.price.sel s{color:#ffe2d2}
 .empty{display:none;text-align:center;font-weight:800;color:var(--muted);padding:40px 10px}
 footer{text-align:center;padding:26px 16px 34px;font-size:14px;font-weight:700;color:var(--muted);line-height:1.9}
 footer a{color:var(--orange);text-decoration:none;font-weight:800}
+
+/* ===== نافذة الطلب ===== */
+.ov{position:fixed;inset:0;background:rgba(42,26,14,.45);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.hide{display:none!important}
+.sh{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom,0px))}
+@media(min-width:640px){.ov{align-items:center}.sh{border-radius:24px}}
+.sh-top{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.sh-top img{width:64px;height:64px;border-radius:14px;object-fit:cover;background:var(--orange);flex:none}
+.sh-top h3{font-size:18px;font-weight:900;line-height:1.4}
+.sh-top p{font-size:14px;font-weight:800;color:var(--orange)}
+.sh-x{margin-inline-start:auto;align-self:flex-start;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-size:18px;font-weight:900;color:var(--ink);flex:none}
+.lbl{display:block;font-size:14px;font-weight:900;margin:14px 0 7px}
+.qty{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.qty button{width:44px;height:42px;border:0;background:var(--pill);font-size:22px;font-weight:900;color:var(--ink)}
+.qty span{min-width:46px;text-align:center;font-size:18px;font-weight:900}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.types button{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 4px;font-size:14px;font-weight:900;color:var(--ink);line-height:1.5}
+.types button b{display:block;font-size:22px}
+.types button.on{border-color:var(--orange);background:var(--pill);box-shadow:inset 0 0 0 1.5px var(--orange)}
+.sh input,.sh select,.sh textarea{width:100%;font:inherit;font-size:15px;font-weight:700;padding:10px 13px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+.sh input:focus,.sh select:focus,.sh textarea:focus{border-color:var(--orange)}
+.sh textarea{min-height:58px;resize:vertical}
+.loc{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--orange);background:#fff;color:var(--orange);border-radius:14px;padding:11px;font-size:15px;font-weight:900}
+.loc.ok{border-style:solid;background:#EEF7F0;border-color:var(--green);color:var(--green-d)}
+.tip{font-size:12.5px;font-weight:700;color:var(--muted);margin-top:6px;line-height:1.7}
+.send{width:100%;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#fff;border:0;border-radius:16px;font-size:18px;font-weight:900;padding:13px}
+.send svg{width:24px;height:24px;fill:#fff}
+.err2{color:#C0392B;font-size:13px;font-weight:800;margin-top:8px;min-height:18px}
+
+/* ===== شريط تتبع الوصول ===== */
+.trk{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:55;max-width:520px;margin:0 auto;
+  background:var(--ink);color:#fff;border-radius:20px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(42,26,14,.35)}
+.trk .tx{flex:1;min-width:0;font-size:14px;font-weight:800;line-height:1.6}
+.trk .tx small{display:block;font-size:12px;opacity:.75;font-weight:700}
+.trk .near{display:none;background:var(--green);color:#fff;border:0;border-radius:12px;padding:9px 12px;font-size:14px;font-weight:900;white-space:nowrap}
+.trk.close{background:var(--green-d)}
+.trk.close .near{display:block;background:#fff;color:var(--green-d)}
+.trk .stop{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:10px;width:34px;height:34px;font-size:16px;font-weight:900;flex:none}
 :focus-visible{outline:3px solid var(--orange);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.tabs{scroll-behavior:auto}}
 </style>
@@ -125,6 +163,49 @@ footer a{color:var(--orange);text-decoration:none;font-weight:800}
   العين – بالقرب من بوادي مول
 </footer>
 
+
+<!-- نافذة الطلب -->
+<div class="ov hide" id="ov">
+  <div class="sh" role="dialog" aria-modal="true" aria-labelledby="oName">
+    <div class="sh-top"><img id="oImg" alt=""><div><h3 id="oName"></h3><p id="oPrice"></p></div><button class="sh-x" id="oX" aria-label="إغلاق">✕</button></div>
+    <span class="lbl">الكمية</span>
+    <div class="qty"><button type="button" id="qMinus" aria-label="نقص">−</button><span id="qVal">1</span><button type="button" id="qPlus" aria-label="زيادة">+</button></div>
+    <span class="lbl">نوع الطلب</span>
+    <div class="types" id="types">
+      <button type="button" data-t="pickup"><b>🛍️</b>استلام</button>
+      <button type="button" data-t="delivery"><b>🚗</b>توصيل</button>
+      <button type="button" data-t="dinein"><b>🍽️</b>في المطعم</button>
+    </div>
+    <div id="fPickup" class="hide">
+      <label class="lbl" for="pTime">وقت الاستلام</label>
+      <select id="pTime"><option>بأقرب وقت</option><option>بعد 15 دقيقة</option><option>بعد 30 دقيقة</option><option>بعد 45 دقيقة</option><option>بعد ساعة</option></select>
+    </div>
+    <div id="fDine" class="hide">
+      <label class="lbl" for="dPeople">عدد الأشخاص</label>
+      <select id="dPeople"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10+</option></select>
+    </div>
+    <div id="fLoc" class="hide">
+      <span class="lbl" id="locLbl">موقعك</span>
+      <button type="button" class="loc" id="locBtn">📍 مشاركة موقعي</button>
+      <p class="tip" id="locTip"></p>
+      <div id="fAddr" class="hide"><label class="lbl" for="dAddr">تفاصيل العنوان (اختياري)</label><input id="dAddr" placeholder="المنطقة، الشارع، رقم الفيلا أو البناية"></div>
+    </div>
+    <label class="lbl" for="cName">الاسم</label>
+    <input id="cName" autocomplete="name" placeholder="اسمك">
+    <label class="lbl" for="cNote">ملاحظات (اختياري)</label>
+    <textarea id="cNote" placeholder="مثال: بدون حار، عيش أبيض…"></textarea>
+    <p class="err2" id="oErr"></p>
+    <button class="send" id="oSend"></button>
+  </div>
+</div>
+
+<!-- شريط تتبع الوصول -->
+<div class="trk hide" id="trk">
+  <div class="tx" id="trkTx">جاري تحديد موقعك…</div>
+  <button class="near" id="trkNear">أبلغ المطعم</button>
+  <button class="stop" id="trkStop" aria-label="إيقاف التتبع">✕</button>
+</div>
+
 <script>/* ===================== إعدادات منيو تنوركو =====================
    1) رقم الواتساب: بدون صفر البداية ومع مفتاح الدولة 971
    2) رقم الاتصال: كما يُكتب في الجوال
@@ -134,6 +215,9 @@ footer a{color:var(--orange);text-decoration:none;font-weight:800}
 window.CONFIG = {
   WHATSAPP: "971500888917",
   CALL: "0500888917",
+  // موقع المطعم (لحساب المسافة ووقت الوصول)
+  REST_LAT: 24.160075,
+  REST_LNG: 55.825521,
   SUPABASE_URL: "PASTE_YOUR_SUPABASE_URL_HERE",
   SUPABASE_KEY: "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"
 };
@@ -305,15 +389,87 @@ menuEl.addEventListener('click',e=>{
   if(w){e.preventDefault(); order(all[+w.dataset.k]);}
 });
 
+
+/* ===================== الطلب ===================== */
+const REST={lat:CONFIG.REST_LAT||24.160075,lng:CONFIG.REST_LNG||55.825521};
+const TYPES={pickup:'🛍️ استلام من المطعم',delivery:'🚗 توصيل',dinein:'🍽️ أكل في المطعم'};
+const $=id=>document.getElementById(id);
+let cur=null, qty=1, otype='', myLoc=null, lastOrder=null;
+function km(a,b){const R=6371,r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dg=r(b.lng-a.lng);
+  const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+const etaMin=d=>Math.max(1,Math.round(d*1.35/40*60));   // تقدير: طريق أطول 35% وسرعة 40 كم/س داخل المدينة
+function unitPrice(it){if(it.sizes){const z=it.sizes[it.sel];return{label:z[0],val:+z[1]}} if(it.txt)return{label:'',val:null,txt:it.txt};return{label:'',val:+it.p}}
+function priceLine(it){const u=unitPrice(it);if(u.val==null)return u.txt;const t=u.val*qty;return (u.label?u.label+' · ':'')+(qty>1?`${qty} × ${u.val} = ${t}`:t)+' درهم'}
 function order(it){
-  let price;
-  if(it.sizes){const s=it.sizes[it.sel]; price=`${s[0]}: ${s[1]} درهم`;}
-  else if(it.txt) price=it.txt;
-  else price=`${it.p} درهم`;
-  let msg=`السلام عليكم، أبغى أطلب من منيو تنوركو:\n\n🍽️ ${it.n}\n💰 السعر: ${price}\n📂 القسم: ${it.sec}`;
-  if(it.img&&!/^data:/.test(imgUrl(it.img))) msg+=`\n🖼️ صورة الطلب: ${new URL(imgUrl(it.img),location.href).href}`;
-  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+  cur=it;qty=1;$('qVal').textContent=1;$('oErr').textContent='';
+  $('oName').textContent=it.n; $('oImg').src=imgUrl(it.img)||document.querySelector('.hero img').src;
+  $('oPrice').textContent=priceLine(it);
+  try{$('cName').value=localStorage.getItem('tk_name')||''}catch(e){}
+  setType(otype||'pickup'); $('ov').classList.remove('hide');
 }
+function setType(t){otype=t;
+  $('types').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  $('fPickup').classList.toggle('hide',t!=='pickup'); $('fDine').classList.toggle('hide',t!=='dinein');
+  $('fLoc').classList.toggle('hide',t==='pickup'); $('fAddr').classList.toggle('hide',t!=='delivery');
+  $('locLbl').textContent=t==='delivery'?'موقع التوصيل (مطلوب)':'موقعك (اختياري)';
+  $('locTip').textContent=t==='delivery'?'نستخدم موقعك عشان يوصل السائق للمكان الصحيح.'
+    :'إذا شاركت موقعك وخليت الصفحة مفتوحة، نتابع وصولك ولما تقرب 5 دقائق تقدر تبلغنا بضغطة عشان نجهز طاولتك.';
+  $('oSend').innerHTML=ICON_WA+'<span>'+(t==='dinein'?'احجز وأرسل الطلب':'أرسل الطلب عبر واتساب')+'</span>';
+  drawLoc();
+}
+function drawLoc(){const b=$('locBtn');
+  if(myLoc){const d=km(myLoc,REST);b.classList.add('ok');b.textContent=`✓ تم تحديد موقعك · يبعد ${d.toFixed(1)} كم (~${etaMin(d)} دقيقة)`;}
+  else{b.classList.remove('ok');b.textContent='📍 مشاركة موقعي';}}
+$('types').onclick=e=>{const b=e.target.closest('button');if(b)setType(b.dataset.t)};
+$('qMinus').onclick=()=>{if(qty>1){qty--;$('qVal').textContent=qty;$('oPrice').textContent=priceLine(cur)}};
+$('qPlus').onclick=()=>{if(qty<50){qty++;$('qVal').textContent=qty;$('oPrice').textContent=priceLine(cur)}};
+const closeOv=()=>$('ov').classList.add('hide');
+$('oX').onclick=closeOv; $('ov').addEventListener('click',e=>{if(e.target.id==='ov')closeOv()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOv()});
+$('locBtn').onclick=()=>{
+  if(!navigator.geolocation){$('oErr').textContent='جهازك ما يدعم تحديد الموقع';return}
+  $('locBtn').textContent='جاري تحديد موقعك…';$('oErr').textContent='';
+  navigator.geolocation.getCurrentPosition(p=>{myLoc={lat:p.coords.latitude,lng:p.coords.longitude};drawLoc()},
+    err=>{drawLoc();$('oErr').textContent=err.code===1?'لازم تسمح للمتصفح بالوصول لموقعك من الإعدادات':'ما قدرنا نحدد موقعك، حاول مرة ثانية'},
+    {enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+};
+$('oSend').onclick=()=>{
+  const it=cur, name=$('cName').value.trim(), note=$('cNote').value.trim();
+  if(otype==='delivery'&&!myLoc){$('oErr').textContent='للتوصيل لازم تشارك موقعك';return}
+  try{if(name)localStorage.setItem('tk_name',name)}catch(e){}
+  let m=`السلام عليكم، طلب جديد من منيو تنوركو\n\n${TYPES[otype]}\n\n🍽️ ${it.n}\n🔢 الكمية: ${qty}\n💰 ${priceLine(it)}`;
+  if(it.img&&!/^data:/.test(imgUrl(it.img))) m+=`\n🖼️ الصورة: ${new URL(imgUrl(it.img),location.href).href}`;
+  if(name) m+=`\n\n👤 الاسم: ${name}`;
+  if(otype==='pickup') m+=`\n⏰ وقت الاستلام: ${$('pTime').value}`;
+  if(otype==='dinein') m+=`\n👥 عدد الأشخاص: ${$('dPeople').value}`;
+  if(myLoc){const d=km(myLoc,REST);m+=`\n📍 الموقع: https://maps.google.com/?q=${myLoc.lat.toFixed(6)},${myLoc.lng.toFixed(6)}\n📏 يبعد عن المطعم ${d.toFixed(1)} كم (~${etaMin(d)} دقيقة)`;}
+  if(otype==='delivery'&&$('dAddr').value.trim()) m+=`\n🏠 العنوان: ${$('dAddr').value.trim()}`;
+  if(note) m+=`\n📝 ملاحظات: ${note}`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(m)}`,'_blank');
+  lastOrder={n:it.n,name,type:otype,people:$('dPeople').value};
+  closeOv();
+  if(otype==='dinein'&&myLoc) startTrack();
+};
+
+/* ===== تتبع الوصول: يشتغل ما دامت الصفحة مفتوحة ===== */
+let watchId=null, alerted=false;
+function startTrack(){
+  if(!navigator.geolocation)return; stopTrack(); alerted=false;
+  $('trk').classList.remove('hide','close'); $('trkTx').innerHTML='جاري متابعة وصولك…<small>خلّ الصفحة مفتوحة</small>';
+  watchId=navigator.geolocation.watchPosition(p=>{
+    const d=km({lat:p.coords.latitude,lng:p.coords.longitude},REST), e=etaMin(d);
+    if(e<=5){$('trk').classList.add('close');$('trkTx').innerHTML=`قربت! باقي ~${e} دقيقة<small>اضغط عشان نجهز طاولتك</small>`;
+      if(!alerted){alerted=true;try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(x){}}}
+    else{$('trk').classList.remove('close');$('trkTx').innerHTML=`🚗 تبعد ${d.toFixed(1)} كم · ~${e} دقيقة<small>لما تقرب 5 دقائق نذكّرك تبلغنا</small>`;}
+  },()=>{$('trkTx').innerHTML='ما قدرنا نتابع موقعك<small>تأكد إن الموقع مسموح</small>'},{enableHighAccuracy:true,maximumAge:15000,timeout:30000});
+}
+function stopTrack(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null;$('trk').classList.add('hide')}
+$('trkStop').onclick=stopTrack;
+$('trkNear').onclick=()=>{
+  const o=lastOrder||{};
+  const m=`السلام عليكم، أنا على بعد 5 دقائق تقريباً من المطعم 🚗\nالرجاء تجهيز الطاولة${o.people?` لـ ${o.people} أشخاص`:''}\n\n🍽️ الطلب: ${o.n||''}${o.name?`\n👤 الاسم: ${o.name}`:''}`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(m)}`,'_blank'); stopTrack();
+};
 
 // tabs: scroll + highlight
 tabsEl.addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;
